@@ -1,12 +1,10 @@
-from fastmcp import FastMCPServer, tool
+from fastmcp import FastMCP
 
-# Create a server instance
-server = FastMCPServer()
+mcp = FastMCP("My MCP Server")
 
-@tool
-def get_greeting(name: str) -> str:
-    """Returns a personalized greeting."""
-    return f"Hello, {name}! Welcome to the world of MCP."
+@mcp.tool
+def greet(name: str) -> str:
+    return f"Hello, {name}!"
 
 if __name__ == "__main__":
-    server.run()
+    mcp.run()

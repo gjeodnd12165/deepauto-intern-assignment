@@ -1,0 +1,9 @@
+[project]
+name = "deepauto-intern-assignment"
+version = "0.1.0"
+description = "A MCP server for deepauto intern assignment"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=2.10.6",
+]
