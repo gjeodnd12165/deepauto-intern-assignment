@@ -5,6 +5,8 @@ from fastmcp import FastMCP, Context
 
 from playwright.async_api import async_playwright
 
+from resources import expose_static_resources, expose_pdf_file, expose_html_file
+
 mcp = FastMCP("deepauto intern assignment mcp server")
 
 
@@ -44,8 +46,11 @@ async def html_to_pdf(input_file_path: str, output_file_path: str, ctx: Context)
             margin={"top": "1cm", "bottom": "1cm", "left": "1cm", "right": "1cm"}
         )
 
+        expose_pdf_file(Path(output_file_path), mcp)
+
         await browser.close()
 
 
 if __name__ == "__main__":
+    expose_static_resources()
     mcp.run()
