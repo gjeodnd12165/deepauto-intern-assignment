@@ -3,16 +3,10 @@ import logging
 
 from fastmcp import FastMCP, Context
 
-from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
-from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import (
-    PdfPipelineOptions,
-)
-from docling.datamodel.settings import settings
-from docling.document_converter import DocumentConverter, PdfFormatOption
-
+from playwright.async_api import async_playwright
 
 mcp = FastMCP("deepauto intern assignment mcp server")
+
 
 @mcp.tool
 def greeting(name: str) -> str:
@@ -22,66 +16,35 @@ def greeting(name: str) -> str:
     return f"Hello {name}!"
 
 @mcp.tool
-async def read_as_markdown(input_file_path: str, ctx: Context) -> str:
+async def html_to_pdf(input_file_path: str, output_file_path: str, ctx: Context) -> None:
     """
-    Recieve a name of a pdf file in the pdf/ directory and
-    convert that as markdown text.
+    Recieve a name of a htm/html file and
+    save that as a pdf file.
     """
-    await ctx.debug(f"Tool called with file: '{input_file_path}'")
 
-    target_file = Path("pdf") / input_file_path
-
-    if not Path(target_file).is_file():
-        error_message = f"The file '{input_file_path}' does not exist in the pdf/ directory."
+    if not Path(input_file_path).is_file():
+        error_message = f"{input_file_path} is not a valid file path."
         await ctx.error(error_message)
         return error_message
+    # elif not Path(output_file_path).is_file():
+    #     error_message = f"{output_file_path} is not a valid file path" 
+    #     await ctx.error(error_message)
+    #     return error_message
     
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    logging.getLogger("docling").setLevel(logging.DEBUG)
-    
-    acceleator_options = AcceleratorOptions(
-        num_threads=8, device=AcceleratorDevice.AUTO
-    )
-    pipeline_options = PdfPipelineOptions()
-    pipeline_options.accelerator_options = acceleator_options
-    pipeline_options.do_ocr = False
-    pipeline_options.do_table_structure = False
-    pipeline_options.table_structure_options.do_cell_matching = True
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
 
-    try:
-        converter = DocumentConverter(
-            format_options={
-                InputFormat.PDF: PdfFormatOption(
-                    pipeline_options=pipeline_options,
-                )
-            }
+        await page.goto(Path(input_file_path).resolve().as_uri())
+
+        await page.pdf(
+            path=output_file_path,
+            format="A4",
+            print_background=True,
+            margin={"top": "1cm", "bottom": "1cm", "left": "1cm", "right": "1cm"}
         )
-        await ctx.debug(f"Starting conversion for '{target_file}' in a worker thread.")
 
-        # Enable the profiling to measure the time spent
-        settings.debug.profile_pipeline_timings = True
-
-        # Conversion
-        conversion_result = converter.convert(target_file)
-        doc = conversion_result.document
-
-        # list with total time per document
-        doc_conversion_secs = conversion_result.timings["pipeline_total"].times
-
-        md = doc.export_to_markdown()
-
-        await ctx.debug(f"Successfully converted '{target_file}'.")
-        await ctx.debug(doc_conversion_secs)
-        return md
-
-    except Exception as e:
-        # Catch any exceptions from the library
-        error_message = f"An unexpected error occurred while converting '{input_file_path}'"
-        await ctx.error(f"{error_message}: {e}")
-        return f"{error_message}. Please check the server logs for details."
+        await browser.close()
 
 
 if __name__ == "__main__":
