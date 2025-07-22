@@ -6,6 +6,8 @@ import requests
 
 from fastmcp import FastMCP, Context
 
+from docling.document_converter import DocumentConverter
+
 from playwright.async_api import async_playwright
 
 from bs4 import BeautifulSoup
@@ -19,6 +21,25 @@ def greeting(name: str) -> str:
     Greet the user with name!
     """
     return f"Hello {name}!"
+
+PDF_FILE_PATH = "pdf/Amazon.com Inc. - Form 8-K. 2024-05-14.pdf"
+
+@mcp.tool
+def read_as_markdown(input_file_path: str, ctx: Context):
+    """
+    Read a pdf file and convert it into a markdown text.
+    """
+
+    if not Path(input_file_path).is_file():
+        error_message = f"{input_file_path} is not a valid file path."
+        ctx.error(error_message)
+        return error_message
+
+    converter = DocumentConverter()
+    doc = converter.convert(input_file_path).document
+
+    return doc.export_to_markdown()
+
 
 @mcp.tool
 async def html_to_pdf(input_file_path: str, output_file_path: str, ctx: Context) -> None:
