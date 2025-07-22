@@ -3,10 +3,14 @@ import logging
 import time
 from typing import Literal
 import requests
+import threading
 
 from fastmcp import FastMCP, Context
 
-from docling.document_converter import DocumentConverter
+from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.datamodel.base_models import InputFormat
 
 from playwright.async_api import async_playwright
 
@@ -16,30 +20,100 @@ mcp = FastMCP("deepauto intern assignment mcp server")
 
 
 @mcp.tool
-def greeting(name: str) -> str:
+async def greeting(name: str) -> str:
     """
     Greet the user with name!
     """
     return f"Hello {name}!"
 
+# Global storage for background tasks
+conversion_tasks: dict[str, str] = {}
+
+def read_as_markdown_background(task_id: str, input_file_path: str, ctx: Context):
+    """
+    Background conversion function
+    """
+
+    try:
+        # Update status
+        conversion_tasks[task_id]["status"] = "RUNNING"
+        
+        # Optimized conversion
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = False
+        pipeline_options.do_table_structure = False
+        pipeline_options.generate_page_images = False
+        
+        converter = DocumentConverter(
+        format_options={
+            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+        }
+    )
+        print("asdas")
+        ctx.debug("Pdf to docling document conversion starts")
+        conversion_start = time.time()
+        doc = converter.convert(input_file_path).document
+        conversion_time = time.time() - conversion_start
+        ctx.debug(f"Pdf to docling document conversion finished: {conversion_time:.2f}s")
+
+        markdown = doc.export_to_markdown()
+        
+        # Store result
+        conversion_tasks[task_id]["status"] = "SUCCESS"
+        conversion_tasks[task_id]["result"] = markdown
+        
+    except Exception as e:
+        conversion_tasks[task_id]["status"] = "ERROR"
+        conversion_tasks[task_id]["error"] = str(e)
+
+
 PDF_FILE_PATH = "pdf/Amazon.com Inc. - Form 8-K. 2024-05-14.pdf"
 
 @mcp.tool
-def read_as_markdown(input_file_path: str, ctx: Context):
+async def read_as_markdown(input_file_path: str, ctx: Context):
     """
     Read a pdf file and convert it into a markdown text.
     """
-
+    
     if not Path(input_file_path).is_file():
         error_message = f"{input_file_path} is not a valid file path."
         ctx.error(error_message)
         return error_message
 
-    converter = DocumentConverter()
-    doc = converter.convert(input_file_path).document
-
-    return doc.export_to_markdown()
-
+    # Check if we have an existing task for this file
+    task_key = f"convert_{hash(input_file_path)}"
+    
+    if task_key in conversion_tasks:
+        task = conversion_tasks[task_key]
+        
+        if task["status"] == "PENDING":
+            return {"status": "PENDING", "message": "Conversion starting..."}
+        elif task["status"] == "RUNNING":
+            return {"status": "RUNNING", "message": "Converting PDF, please wait..."}
+        elif task["status"] == "SUCCESS":
+            # Return result and clean up
+            result = task["result"]
+            del conversion_tasks[task_key]
+            return result
+        elif task["status"] == "ERROR":
+            error = task["error"]
+            del conversion_tasks[task_key]
+            return f"Conversion failed: {error}"
+    
+    # Start new conversion task
+    conversion_tasks[task_key] = {"status": "PENDING"}
+    
+    thread = threading.Thread(
+        target=read_as_markdown_background,
+        args=(task_key, input_file_path, ctx),
+        daemon=True  # Dies when main process dies
+    )
+    thread.start()
+    
+    return {
+        "status": "PENDING", 
+        "message": "Starting PDF conversion. This may take a while. Please check back in a moment."
+    }
 
 @mcp.tool
 async def html_to_pdf(input_file_path: str, output_file_path: str, ctx: Context) -> None:

@@ -1,5 +1,6 @@
 from pathlib import Path
 import logging
+import time
 
 from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
 from docling.datamodel.base_models import InputFormat
@@ -11,7 +12,9 @@ from docling.document_converter import DocumentConverter, PdfFormatOption
 
 
 def main():
+    # input_doc_path = "sample.pdf"
     input_doc_path = "pdf/Amazon.com Inc. - Form 8-K. 2024-05-14.pdf"
+    # input_doc_path = "pdf/Amazon.com Inc. - Form DEF 14A. Definitive Proxy Statement. Notice of 2025 Annual Meeting of Shareholders.pdf"
 
     logging.basicConfig(
         level=logging.DEBUG,
@@ -19,12 +22,12 @@ def main():
     )
 
     # Explicitly set the accelerator
-    # accelerator_options = AcceleratorOptions(
-    #     num_threads=8, device=AcceleratorDevice.AUTO
-    # )
     accelerator_options = AcceleratorOptions(
-        num_threads=8, device=AcceleratorDevice.CPU
+        num_threads=8, device=AcceleratorDevice.AUTO
     )
+    # accelerator_options = AcceleratorOptions(
+    #     num_threads=8, device=AcceleratorDevice.CPU
+    # )
     # accelerator_options = AcceleratorOptions(
     #     num_threads=8, device=AcceleratorDevice.MPS
     # )
@@ -40,6 +43,8 @@ def main():
     pipeline_options.do_ocr = False
     pipeline_options.do_table_structure = False
     pipeline_options.table_structure_options.do_cell_matching = True
+    pipeline_options.generate_page_images = False
+    pipeline_options.generate_picture_images = False
 
     converter = DocumentConverter(
         format_options={
@@ -53,15 +58,21 @@ def main():
     settings.debug.profile_pipeline_timings = True
 
     # Convert the document
-    conversion_result = converter.convert(input_doc_path)
+    phase1_start = time.time()
+    conversion_result = converter.convert(source=input_doc_path)
     doc = conversion_result.document
+    phase1_time = time.time() - phase1_start
 
     # List with total time per document
     doc_conversion_secs = conversion_result.timings["pipeline_total"].times
 
+    phase2_start = time.time()
     md = doc.export_to_markdown()
+    phase2_time = time.time() - phase2_start
     print(md)
     print(f"Conversion secs: {doc_conversion_secs}")
+    print(f"pdf to docling document: {phase1_time:.2f}s")
+    print(f"docling document to markdown: {phase2_time:.2f}s")
 
 if __name__ == "__main__":
     main()
