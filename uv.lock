@@ -306,15 +306,19 @@ name = "deepauto-intern-assignment"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "beautifulsoup4" },
     { name = "docling" },
     { name = "fastmcp" },
+    { name = "lxml" },
     { name = "pytest-playwright" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.13.4" },
     { name = "docling", specifier = ">=2.42.0" },
     { name = "fastmcp", specifier = ">=2.10.6" },
+    { name = "lxml", specifier = ">=5.4.0" },
     { name = "pytest-playwright", specifier = ">=0.7.0" },
 ]
 
