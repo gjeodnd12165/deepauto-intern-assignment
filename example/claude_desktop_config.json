@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "deepauto-intern-assignment": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "<absolute path to where main.py is>",
+        "run",
+        "main.py"
+      ]
+    }
+  }
+}
