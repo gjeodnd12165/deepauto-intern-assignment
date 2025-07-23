@@ -1,3 +1,1 @@
-"""
-MCP Tools
-"""
+"""MCP Tools"""

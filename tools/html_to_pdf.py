@@ -8,15 +8,27 @@ from playwright.async_api import async_playwright
 
 @mcp.tool
 async def html_to_pdf(input_file_path: str, output_file_path: str, ctx: Context) -> None:
-    """
-    Recieve a name of a htm/html file and
-    save that as a pdf file.
+    """Converts a html file to a pdf file.
+
+    Transfrom given html to a pdf file using playwright.
+
+    Args:
+        input_file_path: A path to a html file relative to the server directory.
+            This path must be under html/
+        output_file_path: A path of a pdf file to save relative to the server
+            directory. This path must be under pdf/
+    
+    Returns:
+        None
+    
+    Raises:
+        ValueError: If the specified input_file_path towards not existing file.
     """
 
     if not Path(input_file_path).is_file():
-        error_message = f"{input_file_path} is not a valid file path."
-        await ctx.error(error_message)
-        return error_message
+        raise ValueError(
+            f"{input_file_path} is not a valid file path."
+        )
     
     async with async_playwright() as p:
         browser = await p.chromium.launch()

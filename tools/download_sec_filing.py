@@ -17,8 +17,33 @@ async def download_sec_filing(
     output_dir_path: str,
     ctx: Context
 ) -> str:
-    """
-    Downloads SEC / EDGAR filing.
+    """Fetches SEC / EDGAR filings.
+
+    Downloads filings from SEC by the given criteria.  
+    To limit the complexity, it fetches the most recent one from the year.
+
+    Args:
+        cik: The central index key of a company.
+        year: A year to find filings. Only in 2021-2025 are allowed.
+        filing_type: A specific type of a primary document of a filing.
+            Only "8-K", "10-Q", "10-K", "DEF 14A" are allowed.
+        output_dir_path: A path to a directory to store fetched filings
+            relative to main server directory. It should be under html/ .
+    
+    Returns:
+        A string of the path to the primary document of the filing.
+        
+        For exmaple:
+
+        html/amzn_2024_8_k/amzn-20241031.htm
+
+        The primary document would be html file, 
+        letting other tools to use.
+
+    Raises:
+        ConnectionError: If one of the requests of fetching is failed.
+        FileNotFoundError: If filing with given criteria is not found,
+            or a path to the fetched primary document was not set.
     """
 
     HEADERS = {"User-Agent": "gjeodnd12165/1.0 deepauto-intern-assignment (gjeodnd12165@gmail.com)"}
@@ -35,9 +60,7 @@ async def download_sec_filing(
         response.raise_for_status()
         submissions = response.json()
     except requests.exceptions.RequestException as e:
-        error_message = f"Error fetching submissions for CIK {cik_str} from {submissions_url}: {e}"
-        ctx.error(error_message)
-        return error_message
+        raise ConnectionError(f"Error fetching submissions for CIK {cik_str} from {submissions_url}: {e}")
 
     # Step 2: Find the most recent filing that matches the criteria
     recent_filings = submissions['filings']['recent']
@@ -55,9 +78,7 @@ async def download_sec_filing(
             break
 
     if not target_filing:
-        error_message = "No matching filing found for the specified year and type."
-        ctx.error(error_message)
-        return error_message
+        raise FileNotFoundError("No matching filing found for the specified year and type.")
 
     # Step 3: Get the list of all files from the filing's index page
     accession_no_dashes = target_filing['accession_number'].replace('-', '')
@@ -72,9 +93,7 @@ async def download_sec_filing(
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
     except requests.exceptions.RequestException as e:
-        error_message = f"Error fetching filing index page from {index_html_url}: {e}"
-        ctx.error(error_message)
-        return error_message
+        raise ConnectionError(f"Error fetching filing index page from {index_html_url}: {e}")
 
     all_files = []
     for table in soup.find_all('table'):
@@ -110,11 +129,7 @@ async def download_sec_filing(
                 primary_file_local_path = str(local_path)
 
         except requests.exceptions.RequestException as e:
-            error_message = f"Failed to download from {download_url}: {e}"
-            ctx.error(error_message)
-            # Decide if you want to stop all downloads or just skip this file.
-            # This implementation stops everything if any file fails.
-            return error_message
+            raise ConnectionError(f"Failed to download from {download_url}: {e}")
 
     if primary_file_local_path:
         ctx.info(f"\nDownload complete. Files saved in: {save_path}")
@@ -123,6 +138,4 @@ async def download_sec_filing(
         # This case would be hit if the primary document was listed but failed to download,
         # and the loop continued (which it won't with the current error handling).
         # Or, if the primary document was never found in the file list.
-        error_message = f"Download process finished, but the primary document '{target_filing['primary_document']}' was not found or downloaded."
-        ctx.error(error_message)
-        return error_message
+        raise FileNotFoundError(f"Download process finished, but the primary document '{target_filing['primary_document']}' was not found or downloaded.")
