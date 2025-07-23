@@ -1,7 +1,21 @@
 from shared import mcp
 
 @mcp.tool
-def greeting(name: str) -> str:
+async def get_a_name() -> str:
+    """Returns hard-coded name.
+
+    Returns a name "Anna". This tool should be called
+    when the user doesn't provide any name.
+
+    Returns:
+        A fixed pre-configured name.
+    
+    """
+
+    return "Anna"
+
+@mcp.tool
+async def greeting(name: str) -> str:
     """Greets the user with name.
 
     Greets the user for testing purpose.  

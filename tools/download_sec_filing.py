@@ -28,7 +28,7 @@ async def download_sec_filing(
         filing_type: A specific type of a primary document of a filing.
             Only "8-K", "10-Q", "10-K", "DEF 14A" are allowed.
         output_dir_path: A path to a directory to store fetched filings
-            relative to main server directory. It should be under html/ .
+            relative to main server directory. It should be under html/<appropriate_name>/ .
     
     Returns:
         A string of the path to the primary document of the filing.
