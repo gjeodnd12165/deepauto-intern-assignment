@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "deepauto-intern-assignment"
 version = "0.1.0"
@@ -9,5 +13,17 @@ dependencies = [
     "docling>=2.42.0",
     "fastmcp>=2.10.6",
     "lxml>=5.4.0",
-    "pytest-playwright>=0.7.0",
+    "playwright>=1.54.0",
+]
+
+[project.scripts]
+mcp-server = "deepauto_intern_assignment:main"
+
+[tool.hatch.build.targets.wheel]
+
+packages = ["src/deepauto_intern_assignment"]
+
+include = [
+    "/src/deepauto_intern_assignment/html/**/*.html", # Includes all .html files in the html folder
+    "/src/deepauto_intern_assignment/pdf/**/*.pdf",   # Includes all .pdf files in the pdf folder
 ]
