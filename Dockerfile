@@ -1,73 +1,60 @@
 # --- Builder Stage ---
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+# Use Ubuntu 24.04 (Noble Numbat) as the base image
+FROM ubuntu:24.04 AS builder
+
+# Install necessary dependencies: Python 3.12, venv support, and pip
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3.12 \
+    python3.12-venv \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install the specific version of uv using pip
+COPY --from=ghcr.io/astral-sh/uv:0.8.2 /uv /uvx /bin/
+
+# Set python3.12 as the default python
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
 
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
-# REMOVED ENV PLAYWRIGHT_BROWSERS_PATH=0
 
 # Copy only dependency definition files
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock* ./
 
-# 2. <<< FIX: Perform all installations and then forcefully remove GPU packages in ONE layer.
-RUN set -e && \
-    echo "STEP 1: Creating venv..." && \
-    uv venv && \
-    \
-    echo "STEP 2: Installing all dependencies from lockfile (including GPU versions for now)..." && \
-    uv sync --no-cache-dir --frozen --no-install-project && \
-    \
-    echo "STEP 3: Uninstalling torch and triton to remove GPU dependencies..." && \
-    uv pip uninstall torch torchvision torchaudio triton && \
-    \
-    echo "STEP 4: Installing the clean, CPU-only version of torch..." && \
-    uv pip install torch --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu && \
-    \
-    echo "STEP 5: Cleaning up all caches..." && \
-    uv cache clean && \
-    echo "Installation and cleanup complete."
+# Create venv using the system's python
+RUN python3 -m venv .venv
 
-# # Create venv before install torch
-# RUN uv venv
+# Activate the venv for subsequent RUN commands
+ENV PATH="/app/.venv/bin:$PATH"
 
-# # Manually pre-install the SMALLER, CPU-only version of torch.
-# # This will prevent uv sync from installing the massive default torch package.
-# # Clean the uv cache to reduce the size of this layer.
-# RUN set -e && \
-#     uv venv && \
-#     uv pip install torch --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu && \
-#     uv sync --no-cache-dir --frozen --no-install-project && \
-#     uv cache clean
-
-# # Install ONLY third-party dependencies from the lockfile
-# RUN --mount=type=cache,target=/root/.cache/uv \
-#     uv sync --frozen --no-install-project
-
-# Manually install only Chromium.
-RUN /app/.venv/bin/playwright install --with-deps chromium
+# Install ONLY third-party dependencies from the lockfile into the venv
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project
 
 # Copy the rest of the source code
 COPY . .
 
-# Install the local project itself
+# Install the local project itself into the venv
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --no-deps .
 
 
 # --- Final Stage ---
-FROM python:3.12-slim-bookworm
+FROM mcr.microsoft.com/playwright/python:v1.54.0-noble
 
 WORKDIR /app
 
 # Copy the virtual environment
 COPY --from=builder /app/.venv ./.venv
 
-# Copy the Playwright browser cache.
-COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
-ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
-
 # Copy the application source code
 COPY --from=builder /app/src ./src
+
+# Copy the document files
+COPY --from=builder /app/html ./html
+COPY --from=builder /app/pdf ./pdf
 
 # Set the PATH to find executables in the final image
 ENV PATH="/app/.venv/bin:$PATH"
