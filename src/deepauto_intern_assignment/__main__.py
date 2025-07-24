@@ -1,5 +1,5 @@
 # __main__.py
 
-from mcp_server import main
+from deepauto_intern_assignment import main
 
 main()

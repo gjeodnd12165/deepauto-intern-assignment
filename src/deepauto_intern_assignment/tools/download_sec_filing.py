@@ -1,4 +1,4 @@
-from shared import mcp
+from deepauto_intern_assignment import mcp
 
 from pathlib import Path
 import time

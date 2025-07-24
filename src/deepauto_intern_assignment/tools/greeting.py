@@ -1,4 +1,4 @@
-from shared import mcp
+from deepauto_intern_assignment import mcp
 
 @mcp.tool
 async def get_a_name() -> str:
