@@ -1,4 +1,4 @@
-"""Shared across the codebase"""
+"""Provides mcp server instance"""
 
 from fastmcp import FastMCP
 

@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "deepauto-intern-assignment": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "<absolute path to where main.py is>",
+        "run",
+        "main.py"
+      ]
+    },
+    "deepauto-intern-assignment-docker": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--name",
+        "deepauto-intern-assignment-docker-cursor",
+        "gjeodnd12165/deepauto-intern-assignment"
+      ]
+    }
+  }
+}
