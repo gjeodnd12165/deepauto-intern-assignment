@@ -1,0 +1,12 @@
+name: Issue about a bug
+description: Make a suggestion to resolve a bug.
+labels:
+  - bug
+body:
+  - type: textarea
+    attributes:
+      label: What is the bug?
+      description: Please explain in detail.
+    validations:
+      required: true
+    
