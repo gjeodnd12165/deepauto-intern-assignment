@@ -1,6 +1,6 @@
 from .server import mcp
 
-from .tools import download_sec_filing, greeting, html_to_pdf
+from .tools import download_sec_filing, html_to_pdf, read_as_markdown
 
 def main():
     mcp.run()
