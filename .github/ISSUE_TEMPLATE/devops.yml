@@ -1,0 +1,12 @@
+name: Issue about a new devops feature
+description: Make a suggestion to improve the devops pipeline.
+labels:
+  - enhancement
+body:
+  - type: textarea
+    attributes:
+      label: What is the feature?
+      description: Please explain in detail.
+    validations:
+      required: true
+    
