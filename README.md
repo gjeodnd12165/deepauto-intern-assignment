@@ -43,12 +43,13 @@ It will use the latest version of `gjeodnd12165/deepauto-intern-assignment` imag
       "command": "docker",
       "args": [
         "run",
-        "gjeodnd12165/deepauto-intern-assignment",
+        "--pull",
+        "always",
         "--rm",
         "-i",
         "--name",
         "deepauto-intern-assignment-docker-claude",
-        "--pull=always"
+        "gjeodnd12165/deepauto-intern-assignment"
       ]
     }
   }
