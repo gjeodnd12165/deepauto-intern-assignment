@@ -13,11 +13,12 @@
       "command": "docker",
       "args": [
         "run",
+        "gjeodnd12165/deepauto-intern-assignment",
         "--rm",
         "-i",
         "--name",
-        "deepauto-intern-assignment-docker-cursor",
-        "gjeodnd12165/deepauto-intern-assignment"
+        "deepauto-intern-assignment-docker-claude",
+        "--pull=always"
       ]
     }
   }

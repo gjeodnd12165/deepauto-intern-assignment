@@ -1,13 +1,9 @@
-import os
 from pathlib import Path
 import re
 
 from deepauto_intern_assignment import mcp
 
-from markdownify import MarkdownConverter, markdownify
-from bs4 import Tag
-import readabilipy.simple_json
-import requests
+from markdownify import MarkdownConverter
 
 @mcp.tool(enabled=False)
 async def read_as_markdown(
