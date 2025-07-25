@@ -3,6 +3,15 @@ name: Build Docker Image and Push to Dockerhub
 on:
   push:
     branches: [ main ]
+    paths:
+      - html/**
+      - pdf/**
+      - src/**
+      - dockerignore
+      - .python-version
+      - Dockerfile
+      - pyproject.toml
+      - uv.lock
 
 jobs:
   build-and-push:

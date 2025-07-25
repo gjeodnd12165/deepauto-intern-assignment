@@ -84,9 +84,14 @@ Download def 14a filings of 320193, in 2021 and convert them into a pdf file and
 
 ---
 
+## Explanation
 ### Tools
 #### ~~read_as_markdown~~
 > **Not implemented**
+
+Due to lack of resources of a local environment, I couldn't make it possible to run this tool properly.  
+There is some attempts to make it possible in [dev/feature/pdf-to-markdown](https://github.com/gjeodnd12165/deepauto-intern-assignment) branch and Issue [#3](https://github.com/gjeodnd12165/deepauto-intern-assignment/issues/3).  
+
 
 ##### read_as_markdownify
 Converts a local HTML file into markdown text using markdownify.  
