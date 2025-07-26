@@ -1,11 +1,15 @@
 from pathlib import Path
 import re
 
+from docling import document_converter
+
 from deepauto_intern_assignment import mcp
 
 from markdownify import MarkdownConverter
 
-@mcp.tool(enabled=False)
+from docling.document_converter import DocumentConverter
+
+@mcp.tool
 async def read_as_markdown(
     input_file_path: str
 ) -> str:
@@ -29,6 +33,12 @@ async def read_as_markdown(
         raise ValueError(
             f"{input_file_path} is not a valid file path."
         )
+    
+    converter = DocumentConverter()
+    doc = converter.convert(input_file_path).document
+
+    md = doc.save_as_markdown()
+    return md
 
 @mcp.tool
 async def read_as_markdownify(

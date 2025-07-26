@@ -6,7 +6,7 @@
         "--directory",
         "<absolute path to where main.py is>",
         "run",
-        "main.py"
+        "mcp-server"
       ]
     },
     "deepauto-intern-assignment-docker": {
