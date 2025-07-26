@@ -1,0 +1,12 @@
+name: Issue about a documentation
+description: Make a suggestion to improve the document.
+labels:
+  - documentation
+body:
+  - type: textarea
+    attributes:
+      label: What is the documentation about?
+      description: Please explain in detail.
+    validations:
+      required: true
+    

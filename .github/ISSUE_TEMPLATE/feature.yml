@@ -1,0 +1,12 @@
+name: Issue about a new feature
+description: Make a suggestion to improve the feature.
+labels:
+  - enhancement
+body:
+  - type: textarea
+    attributes:
+      label: What is the feature?
+      description: Please explain in detail.
+    validations:
+      required: true
+    
